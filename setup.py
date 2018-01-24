@@ -14,7 +14,7 @@ import os
 import json
 import glob
 
-from tools.setup_helpers.env import check_env_flag
+from tools.setup_helpers.env import check_env_flag, SanitizerFlags
 from tools.setup_helpers.cuda import WITH_CUDA, CUDA_HOME, CUDA_VERSION
 from tools.setup_helpers.cudnn import (WITH_CUDNN, CUDNN_LIBRARY,
                                        CUDNN_LIB_DIR, CUDNN_INCLUDE_DIR)
@@ -608,6 +608,11 @@ if DEBUG:
     else:
         extra_compile_args += ['-O0', '-g']
         extra_link_args += ['-O0', '-g']
+
+sanitizer_flags = SanitizerFlags.from_env()
+extra_compile_args, extra_link_args = sanitizer_flags.add_to(extra_compile_args, extra_link_args)
+if sanitizer_flags.flags:
+    print('Sanitize options:', sanitizer_flags.flags)
 
 if WITH_SCALARS:
     extra_compile_args += ['-DWITH_SCALARS']
