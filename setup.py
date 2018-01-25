@@ -37,6 +37,9 @@ WITH_DISTRIBUTED_MW = WITH_DISTRIBUTED and check_env_flag('WITH_DISTRIBUTED_MW')
 
 WITH_SCALARS = check_env_flag('WITH_SCALARS')
 
+SANITIZE_ENV_VAR = 'SANITIZE'
+SANITIZERS = SanitizerFlags.from_env(SANITIZE_ENV_VAR)
+
 try:
     import ninja
     WITH_NINJA = True
@@ -137,6 +140,7 @@ def build_libs(libs):
         my_env["CUDNN_LIB_DIR"] = CUDNN_LIB_DIR
         my_env["CUDNN_LIBRARY"] = CUDNN_LIBRARY
         my_env["CUDNN_INCLUDE_DIR"] = CUDNN_INCLUDE_DIR
+    SANITIZERS.add_to_env(SANITIZE_ENV_VAR, my_env)
 
     if subprocess.call(build_libs_cmd + libs, env=my_env) != 0:
         sys.exit(1)
@@ -609,10 +613,9 @@ if DEBUG:
         extra_compile_args += ['-O0', '-g']
         extra_link_args += ['-O0', '-g']
 
-sanitizer_flags = SanitizerFlags.from_env()
-extra_compile_args, extra_link_args = sanitizer_flags.add_to(extra_compile_args, extra_link_args)
-if sanitizer_flags.flags:
-    print('Sanitize options:', sanitizer_flags.flags)
+SANITIZERS.add_to_flags(extra_compile_args, extra_link_args)
+if SANITIZERS.flags():
+    print('Sanitize options:', sanitizer_flags.flags())
 
 if WITH_SCALARS:
     extra_compile_args += ['-DWITH_SCALARS']
